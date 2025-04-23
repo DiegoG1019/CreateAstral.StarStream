@@ -4,13 +4,155 @@ local repoName = "CreateAstral.StarStream"
 local ghDownloadAddr = "https://raw.githubusercontent.com/"..repoUser.."/"..repoName.."/refs/heads/master/"
 local ghQueryAddr = "https://api.github.com/repos/"..repoUser.."/"..repoName.."/git/trees"
 
+StarStream = {}
+
+local json = require 'json'
+
+function string.starts(String,Start)
+   return string.sub(String,1,string.len(Start))==Start
+end
+
 function update()
+  print("Updating...")
+  local r = inner_update()
+  
+  if r then 
+    print("Updated!")
+    os.reboot()
+  end
+end
+
+function getFilesRecursively(path, tab)
+  path = path or ""
+  tab = tab or {}
+  
+  local pendingDirs = {}
+  for i,v in ipairs(path) do
+    if fs.isDir(v) then
+      table.insert(pendingDirs, path.."/"..v)
+    else
+      table.insert(tab, path.."/"..v, true)
+    end
+  end
+  
+  for i,v in ipairs(pendingDirs) do
+    getFilesRecursively(v, tab)
+  end
+  
+  return tab;
+end
+
+function inner_update()
 {
+  local manifest;
+	local manifestFile = fs.open("manifest.json", "r")
+	if not manifestFile then
+		manifest = {}
+	else
+    manifest = json.decode(manifestFile.readAll())
+    manifestFile.close()
+  end
+
+	local r = http.get(ghQueryAddr)
+	if not r.getResponseCode() >= 200 and not <= 299 then
+		return false
+	end
 	
+	local contents = json.decode(r.readAll());
+	
+	if not contents.tree or #(contents.tree) == 0 then return false end
+	
+  local pendingDownload = {}
+  
+  local pendingDeletion = {}
+  getFilesRecursively(pendingDeletion)  
+  
+	for i,v in ipairs(contents.tree) do
+    table.insert(enabled, v.path)
+    
+		if not string.starts(v.path, ".") and not v.path == "LICENSE" then 
+			if not v.sha == manifest[v.path] then
+        manifest[v.path] = v.sha
+        if not v.size then
+          if not fs.isDir(v.path) then
+            fs.makeDir(v.path)
+          end
+        else
+          pendingDeletion[v.path] = nil
+          table.insert(pendingDownload, v)
+        end
+		end
+	end
+  
+  if (#pendingDownload == 0) and (#pendingDeletion == 0) then return false end
+  
+  for k,v in pairs(pendingDeletion) do
+    if v == true then
+      fs.delete(k)
+    end
+  end
+  
+  for i,v in ipairs(pendingDownload) do
+    local response = http.get(v.url)
+    if not r.getResponseCode() >= 200 and not <= 299 then
+      print("ERROR: Could not get file "..v.path)
+    else
+      fs.open(v.path, "w+")
+      fs.write(r.readAll())
+    end
+  end
+  
+  manifestFile = fs.open("manifest.json", "w+")
+  manifestFile.write(json.encode(manifest))
+  manifestFile.close()
+  
+  return true
 }
 
--- update
+function loadModules()
+  
+  local files
+  
+  if fs.isDir("modules") then
+    files = fs.list("modules")
+  end
+  
+  if not files or #files == 0 then
+    print("No modules to load")
+  end
+  
+  for i,v in ipairs(files) do
+    print("Loading module "..v)
+    local moduleFunc = require "modules/"..v
+    if type(moduleFunc) == "function" then
+      table.insert(modules, moduleFunc)
+    end
+  end
+  
+end
 
--- make every computer resetable at any time, also for updates
+function run()
+  update()
+  
+  loadModules()
+  
+  local timerId = os.startTimer(60)
+  
+  while true do
+    local event = { os.pullEvent() }
+    
+    if event[0] == "alarm" and timerId == event[1] 
+    then 
+      update()
+    else    
+      for i,v in ipairs(modules) do
+        pcall(v, unpack(event))
+      end
+    end
+    
+    os.sleep(0.5)
+  end
+  
+end
 
 -- event handling
