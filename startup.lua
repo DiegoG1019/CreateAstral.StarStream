@@ -160,8 +160,9 @@ function loadModules()
   
   for i,v in ipairs(files) do
     v = string.sub(v, 1, -5)
+    local modname = "modules"..v
     print("Loading module "..v)
-    local moduleFunc, moduleInitFunc = require("modules."..v)
+    local moduleFunc, moduleInitFunc = require modname
     
     if type(moduleFunc) == "function" then
       print("Registered listener for module "..v)
