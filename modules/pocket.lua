@@ -42,9 +42,7 @@ local function createStartingMenu()
   
   ClearTerm()
   
-  print(json.encode(_G))
-  
-  term.blit("Loading hosts...", colours.lightBlue, colors.black)
+  term.blit("Loading hosts...", colors.lightBlue, colors.black)
   
   reloadHosts()
   options = {}
@@ -70,7 +68,7 @@ local function render()
   
   for i,v in ipairs(options) do
     if selectionIndex == i then
-      term.blit("* "..v.name, colors.cyan, colors.lightgray)
+      term.blit("* "..v.name, colors.cyan, colors.lightGray)
     else
       term.blit("* "..v.name, colors.blue, colors.orange)
     end
