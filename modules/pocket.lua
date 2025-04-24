@@ -9,22 +9,22 @@ local menu = 0
 local title = ""
 local info = ""
 
-local function reloadHosts()
+function reloadHosts()
   queryableHosts = { rednet.lookup("astralnet-query") }
 end
 
-local function ClearTerm()
+function ClearTerm()
   term.clear()
   term.setCursorPos(1, 1)
 end
 
-local function BlitLine(msg, fg, bg)
+function BlitLine(msg, fg, bg)
   term.setTextColor(fg)
   term.setBackgroundColor(bg)
   print(msg)
 end
 
-local function createOption(name, action)
+function createOption(name, action)
   return { ["name"] = name, ["action"] = action }
 end
 
