@@ -20,7 +20,7 @@ end
 
 local function createQueryMenuFor(host)
   ClearTerm()
-  term.blit("Loading '"..host.."' endpoints...", colors.lightblue, colors.black)
+  term.blit("Loading '"..host.."' endpoints...", colors.lightBlue, colors.black)
   
   local sender, msg = StarStream.AstralNet.Query("endpoints", nil, host, 20)
   
@@ -42,9 +42,9 @@ local function createStartingMenu()
   
   ClearTerm()
   
-  print(colors.lightblue)
+  print(colors.lightBlue)
   
-  term.blit("Loading hosts...", colors.lightblue, colors.black)
+  term.blit("Loading hosts...", colors.lightBlue, colors.black)
   
   reloadHosts()
   options = {}
@@ -65,7 +65,7 @@ end
 local function render()
   ClearTerm()
   
-  term.blit(title, colors.lightblue, colors.black)
+  term.blit(title, colors.lightBlue, colors.black)
   term.blit(info, colors.yellow. colors.black)
   
   for i,v in ipairs(options) do
