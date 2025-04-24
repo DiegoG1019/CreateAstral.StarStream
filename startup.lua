@@ -1,3 +1,12 @@
+if not FirstInit then
+  FirstInit = true
+  local func = loadfile("starstream.startup.lua")
+  if func then
+    local success = pcall(func())
+    if success then return end
+  end
+end
+
 local modules = {}
 local repoUser = "DiegoG1019"
 local repoName = "CreateAstral.StarStream"
