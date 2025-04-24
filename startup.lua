@@ -5,6 +5,7 @@ local ghDownloadAddr = "https://raw.githubusercontent.com/"..repoUser.."/"..repo
 local ghQueryAddr = "https://api.github.com/repos/"..repoUser.."/"..repoName.."/git/trees"
 
 StarStream = {}
+StarStream.queryableInfo = {}
 
 local json = require 'json'
 
@@ -121,17 +122,33 @@ function loadModules()
     print("No modules to load")
   end
   
+  local awaitingInit = {}
+  
   for i,v in ipairs(files) do
     print("Loading module "..v)
-    local moduleFunc = require "modules/"..v
+    local moduleFunc, moduleInitFunc = require "modules/"..v
+    
     if type(moduleFunc) == "function" then
+      print("Registered listener for module "..v)
       table.insert(modules, moduleFunc)
+    else
+      print("Did not register a listener for module "..v)
     end
+    
+    if type(moduleInitFunc) == "function" then
+      table.insert(awaitingInit, moduleInitFunc)
+    end
+    
+  end
+  
+  for i,v in ipairs(awaitingInit) do
+    v()
   end
   
 end
 
-function run()
+if not pocket then
+
   update()
   
   loadModules()
@@ -144,15 +161,37 @@ function run()
     if event[0] == "alarm" and timerId == event[1] 
     then 
       update()
-    else    
+    else
       for i,v in ipairs(modules) do
-        pcall(v, unpack(event))
+        local success, retval = pcall(v, unpack(event))
+        if retval == true then break end
       end
     end
     
     os.sleep(0.5)
   end
   
-end
+else
 
--- event handling
+  update()
+  
+  loadModules()
+  
+  local timerId = os.startTimer(60)
+  
+  while true do
+    local event = { os.pullEvent() }
+    
+    if event[0] == "alarm" and timerId == event[1] 
+    then 
+      update()
+    else
+      for i,v in ipairs(modules) do
+        local success, retval = pcall(v, unpack(event))
+        if retval == true then break end
+      end
+    end
+    
+  end
+  
+end
