@@ -42,7 +42,7 @@ function()
     StarStream.queryableInfo[""] = endpoints
     
     settings.define("astralnet.host", { description = "The hostname of this factory controller", default = nil, type = "string" })
-    local hostname = tostring(settings.get("astralnet.host") or "")..":"..os.getComputerId()
+    local hostname = tostring(settings.get("astralnet.host") or "")..":"..os.getComputerID()
     rednet.host("astralnet-query", hostname)
     
     print("Started hosting 'astralnet-query'")
