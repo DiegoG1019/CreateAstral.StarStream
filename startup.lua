@@ -111,7 +111,7 @@ function inner_update()
   print("Downloading outdated files")
   for i,v in ipairs(pendingDownload) do
     print("Downloading file "..v.path)
-    local response, statusStr = http.get(v.url)
+    local response, statusStr = http.get(ghDownloadAddr..v.path)
     if not response then
       print("ERROR: Could not get file "..v.path.." :"..statusStr)
     else
@@ -147,7 +147,7 @@ function loadModules()
   
   for i,v in ipairs(files) do
     print("Loading module "..v)
-    local moduleFunc, moduleInitFunc = require "modules/"..v
+    local moduleFunc, moduleInitFunc = require "modules."..v
     
     if type(moduleFunc) == "function" then
       print("Registered listener for module "..v)
