@@ -42,7 +42,7 @@ local function createStartingMenu()
   
   ClearTerm()
   
-  print(colours.lightBlue)
+  print(json.encode(_G))
   
   term.blit("Loading hosts...", colours.lightBlue, colors.black)
   
