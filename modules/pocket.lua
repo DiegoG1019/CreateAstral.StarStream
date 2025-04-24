@@ -42,9 +42,9 @@ local function createStartingMenu()
   
   ClearTerm()
   
-  print(colors.lightBlue)
+  print(colours.lightBlue)
   
-  term.blit("Loading hosts...", colors.lightBlue, colors.black)
+  term.blit("Loading hosts...", colours.lightBlue, colors.black)
   
   reloadHosts()
   options = {}
