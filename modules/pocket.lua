@@ -41,6 +41,9 @@ end
 local function createStartingMenu()
   
   ClearTerm()
+  
+  print(colors.lightblue)
+  
   term.blit("Loading hosts...", colors.lightblue, colors.black)
   
   reloadHosts()
@@ -61,7 +64,7 @@ end
 
 local function render()
   ClearTerm()
-  print(colors.lightblue)
+  
   term.blit(title, colors.lightblue, colors.black)
   term.blit(info, colors.yellow. colors.black)
   
