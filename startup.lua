@@ -1,8 +1,8 @@
 local modules = {}
 local repoUser = "DiegoG1019"
 local repoName = "CreateAstral.StarStream"
-local ghDownloadAddr = "https://raw.githubusercontent.com/"..repoUser.."/"..repoName.."/refs/heads/master/"
-local ghQueryAddr = "https://api.github.com/repos/"..repoUser.."/"..repoName.."/git/trees"
+local ghDownloadAddr = "https://raw.githubusercontent.com/"..repoUser.."/"..repoName.."/refs/heads/main/"
+local ghQueryAddr = "https://api.github.com/repos/"..repoUser.."/"..repoName.."/git/trees/main"
 
 StarStream = {}
 StarStream.queryableInfo = {}
@@ -44,7 +44,6 @@ function getFilesRecursively(path, tab)
 end
 
 function inner_update()
-{
   local manifest;
 	local manifestFile = fs.open("manifest.json", "r")
 	if not manifestFile then
@@ -54,10 +53,11 @@ function inner_update()
     manifestFile.close()
   end
 
-	local r = http.get(ghQueryAddr)
-	if not r.getResponseCode() >= 200 and not <= 299 then
-		return false
-	end
+	local r, statusMsg = http.get(ghQueryAddr)
+  if not r then
+    print("Failed to GET from "..ghQueryAddr..": "..statusMsg)
+    return false
+  end
 	
 	local contents = json.decode(r.readAll());
 	
@@ -82,6 +82,7 @@ function inner_update()
           pendingDeletion[v.path] = nil
           table.insert(pendingDownload, v)
         end
+      end
 		end
 	end
   
@@ -95,7 +96,8 @@ function inner_update()
   
   for i,v in ipairs(pendingDownload) do
     local response = http.get(v.url)
-    if not r.getResponseCode() >= 200 and not <= 299 then
+    local rcode = r.getResponseCode()
+    if not rcode >= 200 and not rcode <= 299 then
       print("ERROR: Could not get file "..v.path)
     else
       fs.open(v.path, "w+")
@@ -108,7 +110,7 @@ function inner_update()
   manifestFile.close()
   
   return true
-}
+end
 
 function loadModules()
   
@@ -120,6 +122,7 @@ function loadModules()
   
   if not files or #files == 0 then
     print("No modules to load")
+    return
   end
   
   local awaitingInit = {}
