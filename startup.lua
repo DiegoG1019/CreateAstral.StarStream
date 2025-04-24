@@ -46,6 +46,10 @@ function getFilesRecursively(path, tab)
   return tab;
 end
 
+local function getDownloadUri(treeItem)
+  return treeItem.localpath or treeItem.path end
+end
+
 function inner_update()
   local manifest;
 	local manifestFile = fs.open("manifest.json", "r")
@@ -68,7 +72,7 @@ function inner_update()
 	if not contents.tree or #(contents.tree) == 0 then return false end
 	
   for i,v in ipairs(contents.tree) do
-    if v.path == "startup.lua" then v.path = "starstream.startup.lua" end
+    if v.path == "startup.lua" then v.path = "starstream.startup.lua"; v.dlpath = "startup.lua" end
   end
   
   print("Parsed git tree info")
@@ -111,7 +115,7 @@ function inner_update()
   print("Downloading outdated files")
   for i,v in ipairs(pendingDownload) do
     print("Downloading file "..v.path)
-    local response, statusStr = http.get(ghDownloadAddr..v.path)
+    local response, statusStr = http.get(ghDownloadAddr..(v.dlpath or v.path))
     if not response then
       print("ERROR: Could not get file "..v.path.." :"..statusStr)
     else
