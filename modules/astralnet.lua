@@ -1,5 +1,7 @@
 -- Basically just receive a rednet request and return the requested item from queryable info
 
+print("Initializing AstralNet Module")
+
 StarStream.AstralNet = {}
 StarStream.AstralNet.Query = function(uri, message, recipient, timeout)
   rednet.send(recipient, { ["uri"] = uri, ["body"] = message })
@@ -29,13 +31,16 @@ end,
 function()
   
   local endpoints = {}
-  StarStream.queryableInfo.endpoints = endpoints
   
   for k,v in pairs(StarStream.queryableInfo) do
     table.insert(endpoints, k)
   end
   
-  StarStream.queryableInfo[""] = endpoints
+  if #endpoints > 0 then  
+    table.insert(endpoints, endpoints)
+    StarStream.queryableInfo.endpoints = endpoints
+    StarStream.queryableInfo[""] = endpoints
+  end
   
   settings.define("astralnet.host", { description = "The hostname of this factory controller", default = nil, type = "string" })
   local hostname = tostring(settings.get("astralnet.host") or "")..":"..os.getComputerId()

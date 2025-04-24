@@ -1,5 +1,7 @@
 if not pocket then return end
 
+print("Initializing Pocket Module")
+
 local queryableHosts
 local options = {}
 local selectionIndex = 1

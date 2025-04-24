@@ -149,10 +149,7 @@ function loadModules()
     local moduleFunc, moduleInitFunc = v[1], v[2]
     
     if type(moduleFunc) == "function" then
-      print("Registered listener for module "..v)
       table.insert(modules, moduleFunc)
-    else
-      print("Did not register a listener for module "..v)
     end
     
     if type(moduleInitFunc) == "function" then
@@ -160,9 +157,15 @@ function loadModules()
     end
   end
   
+  print("Registered "..#modules.." module listeners")
+  
+  print("Initializing "..#awaitingInit.." modules")
+  
   for i,v in ipairs(awaitingInit) do
     v()
   end
+  
+  print("Initialized modules")
   
 end
 

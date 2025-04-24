@@ -1,5 +1,7 @@
 if pocket then return end
 
+print("Initializing Factory Module")
+
 local itemHistory = {}
 local fluidHistory = {}
 local energyHistory = {}
