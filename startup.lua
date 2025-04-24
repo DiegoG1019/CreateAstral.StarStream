@@ -13,7 +13,7 @@ function string.starts(String,Start)
    return string.sub(String,1,string.len(Start)) == Start
 end
 
-function update()
+local function update()
   print("Updating...")
   local r = inner_update()
   
@@ -24,6 +24,12 @@ function update()
   
   print("No updates found")
   os.sleep(2)
+end
+
+function dumpError(msg)
+  local dump = fs.open("error.log", "w")
+  dump.write(msg)
+  dump.close()
 end
 
 function getFilesRecursively(path, tab)
@@ -168,7 +174,11 @@ function loadModules()
   print("Initializing "..#awaitingInit.." modules")
   
   for i,v in ipairs(awaitingInit) do
-    v()
+    local success, retval = xpcall(v, debug.traceback)
+    if not success then
+      dumpError(tostring(success)..":::"..tostring(retval))
+      error("Failed to load a module")
+    end
   end
   
   print("Initialized modules")
@@ -215,8 +225,15 @@ else
       update()
     else
       for i,v in ipairs(modules) do
-        local success, retval = pcall(v, unpack(event))
-        if retval == true then break end
+        local success, retval = xpcall(v, debug.traceback, unpack(event))
+        if not success then
+          term.clear()
+          term.setCursorPos(1, 1)
+          term.blit(retval, colors.red, colors.black)
+          return
+        else
+          if retval == true then break end
+        end
       end
     end
     

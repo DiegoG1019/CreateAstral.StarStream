@@ -20,12 +20,12 @@ end
 
 local function createQueryMenuFor(host)
   ClearTerm()
-  term.blit("Loading '"..host.."' endpoints...", colors.lightBlue, colors.black)
+  term.blit("Loading '"..host.."' endpoints...", "3", "f")
   
   local sender, msg = StarStream.AstralNet.Query("endpoints", nil, host, 20)
   
   if (not sender) or msg.code < 0 then
-    term.blit("Could not load host endpoints :(", colors.red, colors.black)
+    term.blit("Could not load host endpoints :(", "e", "f")
     os.sleep(2)
     createStartingMenu()
   else
@@ -42,7 +42,7 @@ local function createStartingMenu()
   
   ClearTerm()
   
-  term.blit("Loading hosts...", colors.lightBlue, colors.black)
+  term.blit("Loading hosts...", "3", "f")
   
   reloadHosts()
   options = {}
@@ -63,14 +63,14 @@ end
 local function render()
   ClearTerm()
   
-  term.blit(title, colors.lightBlue, colors.black)
-  term.blit(info, colors.yellow. colors.black)
+  term.blit(title, "3", "f")
+  term.blit(info, "5", "f")
   
   for i,v in ipairs(options) do
     if selectionIndex == i then
-      term.blit("* "..v.name, colors.cyan, colors.lightGray)
+      term.blit("* "..v.name, "9", "7")
     else
-      term.blit("* "..v.name, colors.blue, colors.orange)
+      term.blit("* "..v.name, "b", "1")
     end
   end
 end
