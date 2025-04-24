@@ -150,6 +150,7 @@ function loadModules()
   local awaitingInit = {}
   
   for i,v in ipairs(files) do
+    v = string.sub(v, 1, -5)
     print("Loading module "..v)
     local moduleFunc, moduleInitFunc = require "modules."..v
     
