@@ -47,7 +47,7 @@ function getFilesRecursively(path, tab)
 end
 
 local function getDownloadUri(treeItem)
-  return treeItem.localpath or treeItem.path end
+  return treeItem.localpath or treeItem.path
 end
 
 function inner_update()
