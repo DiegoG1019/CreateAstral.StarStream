@@ -14,18 +14,24 @@ local function ClearTerm()
   term.setCursorPos(1, 1)
 end
 
+local function BlitLine(msg, fg, bg)
+  term.setTextColor(fg)
+  term.setBackgroundColor(bg)
+  print(msg)
+end
+
 local function createOption(name, action)
   return { ["name"] = name, ["action"] = action }
 end
 
 local function createQueryMenuFor(host)
   ClearTerm()
-  term.blit("Loading '"..host.."' endpoints...", "3", "f")
+  BlitLine("Loading '"..host.."' endpoints...", colors.lightBlue, colors.black)
   
   local sender, msg = StarStream.AstralNet.Query("endpoints", nil, host, 20)
   
   if (not sender) or msg.code < 0 then
-    term.blit("Could not load host endpoints :(", "e", "f")
+    BlitLine("Could not load host endpoints :(", colors.lightBlue, colors.black)
     os.sleep(2)
     createStartingMenu()
   else
@@ -42,7 +48,7 @@ local function createStartingMenu()
   
   ClearTerm()
   
-  term.blit("Loading hosts...", "3", "f")
+  BlitLine("Loading hosts...", colors.lightBlue, colors.black)
   
   reloadHosts()
   options = {}
@@ -63,14 +69,14 @@ end
 local function render()
   ClearTerm()
   
-  term.blit(title, "3", "f")
-  term.blit(info, "5", "f")
+  BlitLine(title, colors.lightBlue, colors.black)
+  BlitLine(info, colors.lime, colors.black)
   
   for i,v in ipairs(options) do
     if selectionIndex == i then
-      term.blit("* "..v.name, "9", "7")
+      BlitLine("* "..v.name, colors.cyan, colors.gray)
     else
-      term.blit("* "..v.name, "b", "1")
+      BlitLine("* "..v.name, colors.blue, colors.orange)
     end
   end
 end
