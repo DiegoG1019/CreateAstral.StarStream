@@ -1,12 +1,3 @@
-if not FirstInit then
-  FirstInit = true
-  local func = loadfile("starstream.startup.lua")
-  if func then
-    func()
-    return
-  end
-end
-
 local modules = {}
 local repoUser = "DiegoG1019"
 local repoName = "CreateAstral.StarStream"
@@ -90,6 +81,7 @@ function inner_update()
   print("Iterating over git tree")
 	for i,v in ipairs(contents.tree) do
     pendingDeletion[v.path] = nil
+    print("Removed file "..v.path.." from deletion")
     
 		if v.path ~= "LICENSE" and not string.starts(v.path, ".") then 
       
@@ -131,7 +123,7 @@ function inner_update()
   end
   
   print("Updating manifest")
-  manifestFile = fs.open("manifest.json", "w+")
+  manifestFile = fs.open("manifest.json", "w")
   manifestFile.write(json.encode(manifest))
   manifestFile.close()
   
