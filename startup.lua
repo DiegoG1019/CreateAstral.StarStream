@@ -171,7 +171,7 @@ function loadModules()
   end
   
   print("Initialized modules")
-  
+  os.sleep(2)
 end
 
 if not pocket then
