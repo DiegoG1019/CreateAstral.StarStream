@@ -148,6 +148,11 @@ function loadModules()
     
     local moduleFunc, moduleInitFunc = v[1], v[2]
     
+    if type(moduleFunc) == "table" then
+      moduleInitFunc = moduleFunc[2]
+      moduleFunc = moduleFunc[1]
+    end
+    
     if type(moduleFunc) == "function" then
       table.insert(modules, moduleFunc)
     end

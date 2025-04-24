@@ -8,7 +8,7 @@ StarStream.AstralNet.Query = function(uri, message, recipient, timeout)
   return rednet.receive("astralnet-query-response", timeout)
 end
 
-return function(event, sender_id, message, protocol)
+return { function(event, sender_id, message, protocol)
   if event == "rednet_message" and sender_id and sender_id ~= os.getComputerId() and protocol == "astralnet-query" and type(message) == "table" then
     
     local uri = message.uri or ""
@@ -40,11 +40,11 @@ function()
     table.insert(endpoints, endpoints)
     StarStream.queryableInfo.endpoints = endpoints
     StarStream.queryableInfo[""] = endpoints
+    
+    settings.define("astralnet.host", { description = "The hostname of this factory controller", default = nil, type = "string" })
+    local hostname = tostring(settings.get("astralnet.host") or "")..":"..os.getComputerId()
+    rednet.host("astralnet-query", hostname)
+    
+    print("Started hosting 'astralnet-query'")
   end
-  
-  settings.define("astralnet.host", { description = "The hostname of this factory controller", default = nil, type = "string" })
-  local hostname = tostring(settings.get("astralnet.host") or "")..":"..os.getComputerId()
-  rednet.host("astralnet-query", hostname)
-  
-  print("Started hosting 'astralnet-query'")
-end
+end }

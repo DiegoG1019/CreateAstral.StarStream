@@ -69,7 +69,7 @@ local function render()
   end
 end
 
-return function(event, key, is_held)
+return { function(event, key, is_held)
   if event == "key" and not is_held then
     if keys.up == key then
       selectionIndex = selectionIndex - 1
@@ -87,4 +87,4 @@ return function(event, key, is_held)
     
     render()
   end
-end, createStartingMenu
+end, createStartingMenu }
