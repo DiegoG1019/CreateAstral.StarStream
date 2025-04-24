@@ -1,8 +1,16 @@
+do
+  local func = loadfile("starstream.startup.lua")
+  if func then
+    func()
+    return
+  end
+end
+
 local modules = {}
 local repoUser = "DiegoG1019"
 local repoName = "CreateAstral.StarStream"
 local ghDownloadAddr = "https://raw.githubusercontent.com/"..repoUser.."/"..repoName.."/refs/heads/main/"
-local ghQueryAddr = "https://api.github.com/repos/"..repoUser.."/"..repoName.."/git/trees/main"
+local ghQueryAddr = "https://api.github.com/repos/"..repoUser.."/"..repoName.."/git/trees/main?recursive=true"
 
 StarStream = {}
 StarStream.queryableInfo = {}
@@ -10,7 +18,7 @@ StarStream.queryableInfo = {}
 local json = require 'json'
 
 function string.starts(String,Start)
-   return string.sub(String,1,string.len(Start))==Start
+   return string.sub(String,1,string.len(Start)) == Start
 end
 
 function update()
@@ -21,6 +29,9 @@ function update()
     print("Updated!")
     os.reboot()
   end
+  
+  print("No updates found")
+  os.sleep(2)
 end
 
 function getFilesRecursively(path, tab)
@@ -60,26 +71,34 @@ function inner_update()
   end
 	
 	local contents = json.decode(r.readAll());
+  r.close();
 	
 	if not contents.tree or #(contents.tree) == 0 then return false end
 	
+  for i,v in ipairs(contents.tree) do
+    if v.path == "startup.lua" then v.path = "starstream.startup.lua" end
+  end
+  
+  print("Parsed git tree info")
+  
   local pendingDownload = {}
   
   local pendingDeletion = {}
   getFilesRecursively(pendingDeletion)  
   
+  print("Iterating over git tree")
 	for i,v in ipairs(contents.tree) do
-    table.insert(enabled, v.path)
+    pendingDeletion[v.path] = nil
     
-		if not string.starts(v.path, ".") and not v.path == "LICENSE" then 
-			if not v.sha == manifest[v.path] then
+		if v.path ~= "LICENSE" and not string.starts(v.path, ".") then 
+      
+			if not manifest[v.path] or v.sha ~= manifest[v.path] then
         manifest[v.path] = v.sha
         if not v.size then
           if not fs.isDir(v.path) then
             fs.makeDir(v.path)
           end
         else
-          pendingDeletion[v.path] = nil
           table.insert(pendingDownload, v)
         end
       end
@@ -88,23 +107,29 @@ function inner_update()
   
   if (#pendingDownload == 0) and (#pendingDeletion == 0) then return false end
   
+  print("Deleting upstream-removed files")
   for k,v in pairs(pendingDeletion) do
     if v == true then
+      print("Deleting file" ..k)
       fs.delete(k)
     end
   end
   
+  print("Downloading outdated files")
   for i,v in ipairs(pendingDownload) do
-    local response = http.get(v.url)
-    local rcode = r.getResponseCode()
-    if not rcode >= 200 and not rcode <= 299 then
-      print("ERROR: Could not get file "..v.path)
+    print("Downloading file "..v.path)
+    local response, statusStr = http.get(v.url)
+    if not response then
+      print("ERROR: Could not get file "..v.path.." :"..statusStr)
     else
-      fs.open(v.path, "w+")
-      fs.write(r.readAll())
+      local downfile = fs.open(v.path, "w")
+      downfile.write(response.readAll())
+      downfile.close()
+      response.close()
     end
   end
   
+  print("Updating manifest")
   manifestFile = fs.open("manifest.json", "w+")
   manifestFile.write(json.encode(manifest))
   manifestFile.close()
