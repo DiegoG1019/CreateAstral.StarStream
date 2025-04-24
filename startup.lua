@@ -1,12 +1,3 @@
-if not FirstInit then
-  FirstInit = true
-  local func = loadfile("starstream.startup.lua")
-  if func then
-    local success = pcall(func())
-    if success then return end
-  end
-end
-
 local modules = {}
 local repoUser = "DiegoG1019"
 local repoName = "CreateAstral.StarStream"
@@ -145,24 +136,17 @@ end
 
 function loadModules()
   
-  local files
+  local moduleInfo = {}
   
-  if fs.isDir("modules") then
-    files = fs.list("modules")
-  end
-  
-  if not files or #files == 0 then
-    print("No modules to load")
-    return
-  end
+  table.insert(moduleInfo, { require 'modules.astralnet' })
+  table.insert(moduleInfo, { require 'modules.factory' })
+  table.insert(moduleInfo, { require 'modules.pocket' })
   
   local awaitingInit = {}
   
-  for i,v in ipairs(files) do
-    v = string.sub(v, 1, -5)
-    local modname = "modules."..v
-    print("Loading module "..v)
-    local moduleFunc, moduleInitFunc = loadfile(modname)()
+  for i,v in ipairs(moduleInfo) do
+    
+    local moduleFunc, moduleInitFunc = v[1], v[2]
     
     if type(moduleFunc) == "function" then
       print("Registered listener for module "..v)
@@ -174,7 +158,6 @@ function loadModules()
     if type(moduleInitFunc) == "function" then
       table.insert(awaitingInit, moduleInitFunc)
     end
-    
   end
   
   for i,v in ipairs(awaitingInit) do
