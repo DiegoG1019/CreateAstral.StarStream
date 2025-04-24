@@ -9,6 +9,10 @@ local menu = 0
 local title = ""
 local info = ""
 
+local function reloadHosts()
+  queryableHosts = { rednet.lookup("astralnet-query") }
+end
+
 local function ClearTerm()
   term.clear()
   term.setCursorPos(1, 1)
@@ -24,7 +28,7 @@ local function createOption(name, action)
   return { ["name"] = name, ["action"] = action }
 end
 
-local function createQueryMenuFor(host)
+function createQueryMenuFor(host)
   ClearTerm()
   BlitLine("Loading '"..host.."' endpoints...", colors.lightBlue, colors.black)
   
@@ -44,7 +48,7 @@ local function createQueryMenuFor(host)
   
 end
 
-local function createStartingMenu()
+function createStartingMenu()
   
   ClearTerm()
   
@@ -60,10 +64,6 @@ local function createStartingMenu()
   
   table.insert(options, createOption("* Reload", createStartingMenu ))
   
-end
-
-local function reloadHosts()
-  queryableHosts = { rednet.lookup("astralnet-query") }
 end
 
 local function render()
