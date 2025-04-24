@@ -1,4 +1,5 @@
-do
+if not FirstInit then
+  FirstInit = true
   local func = loadfile("starstream.startup.lua")
   if func then
     func()
