@@ -9,7 +9,7 @@ StarStream.AstralNet.Query = function(uri, message, recipient, timeout)
 end
 
 return { function(event, sender_id, message, protocol)
-  if event == "rednet_message" and sender_id and sender_id ~= os.getComputerId() and protocol == "astralnet-query" and type(message) == "table" then
+  if event == "rednet_message" and sender_id and sender_id ~= os.getComputerID() and protocol == "astralnet-query" and type(message) == "table" then
     
     local uri = message.uri or ""
     local info = StarStream.queryableInfo[message.uri]

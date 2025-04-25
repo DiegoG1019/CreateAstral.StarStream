@@ -1,0 +1,14 @@
+{
+    "Lua.diagnostics.globals": [
+        "settings",
+        "http",
+        "fs",
+        "rednet",
+        "pocket",
+        "peripheral",
+        "redstone",
+        "term",
+        "colors",
+        "keys"
+    ]
+}

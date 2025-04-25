@@ -15,6 +15,14 @@ StarStream.queryableInfo.factory.items = itemHistory;
 StarStream.queryableInfo.factory.fluids = fluidHistory;
 StarStream.queryableInfo.factory.energy = energyHistory;
 
+settings.define("factory.redstoneMode", 
+  { 
+    ["description"] = "When this setting is not nil, the factory will only take readings upon being given a redstone signal from the designated side. Otherwise, it will take readings every 30 seconds",
+    ["default"] = nil,
+    ["type"] = "string"
+  }
+)
+
 local function prepareReadings(container, newReadings, tstamp)
   
   local out = {}
@@ -100,14 +108,30 @@ local function reloadPeripherals()
   
 end
 
-local timerId = os.startTimer(1)
-return function(event, ev_timerId)
-  if not timerId == ev_timerId then
-    return
+local redMode = settings.get("factory.redstoneMode")
+local timerId
+if not redMode then
+  timerId = os.startTimer(1)
+  
+  return function(event, ev_timerId)
+    if event ~= "timer" or timerId ~= ev_timerId then
+      return
+    end
+    
+    timerId = os.startTimer(30)
+    reloadPeripherals()
+    readItems()
+    return true
+  end
+else
+  
+  return function(event)
+    if event == "redstone" and redstone.getInput(redMode) then
+      reloadPeripherals()
+      readItems()
+      return true
+    end
   end
   
-  timerId = os.startTimer(30)
-  reloadPeripherals()
-  readItems()
 end
   

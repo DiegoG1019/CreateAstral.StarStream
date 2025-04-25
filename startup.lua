@@ -1,3 +1,30 @@
+os.getComputerID = os.getComputerID
+os.sleep = os.sleep
+os.startTimer = os.startTimer
+os.pullEvent = os.pullEvent
+os.reboot = os.reboot
+
+do
+  
+  local hasFailed = settings.get("starstream.failed")
+  
+  if not hasFailed and not StarStreamHasInit then
+    StarStreamHasInit = true
+    
+    local success = pcall(require, 'starstream.startup.lua')
+    if success then return end
+    
+    -- not success
+    settings.set("starstream.failed", true)
+    settings.save()
+  end
+  
+  if hasFailed then
+    print("Defaulting to original startup.lua as previous one failed")
+  end
+  
+end
+
 local modules = {}
 local repoUser = "DiegoG1019"
 local repoName = "CreateAstral.StarStream"
@@ -13,26 +40,7 @@ function string.starts(String,Start)
    return string.sub(String,1,string.len(Start)) == Start
 end
 
-local function update()
-  print("Updating...")
-  local r = inner_update()
-  
-  if r then 
-    print("Updated!")
-    os.reboot()
-  end
-  
-  print("No updates found")
-  os.sleep(2)
-end
-
-function dumpError(msg)
-  local dump = fs.open("error.log", "w")
-  dump.write(msg)
-  dump.close()
-end
-
-function getFilesRecursively(path, tab)
+local function getFilesRecursively(path, tab)
   path = path or ""
   tab = tab or {}
   
@@ -52,11 +60,12 @@ function getFilesRecursively(path, tab)
   return tab;
 end
 
-local function getDownloadUri(treeItem)
-  return treeItem.localpath or treeItem.path
-end
-
-function inner_update()
+local function inner_update(silent)
+  
+  local function update_print(str)
+    if not silent then print(str) end
+  end
+  
   local manifest;
 	local manifestFile = fs.open("manifest.json", "r")
 	if not manifestFile then
@@ -68,7 +77,7 @@ function inner_update()
 
 	local r, statusMsg = http.get(ghQueryAddr)
   if not r then
-    print("Failed to GET from "..ghQueryAddr..": "..statusMsg)
+    update_print("Failed to GET from "..ghQueryAddr..": "..statusMsg)
     return false
   end
 	
@@ -81,17 +90,17 @@ function inner_update()
     if v.path == "startup.lua" then v.path = "starstream.startup.lua"; v.dlpath = "startup.lua" end
   end
   
-  print("Parsed git tree info")
+  update_print("Parsed git tree info")
   
   local pendingDownload = {}
   
   local pendingDeletion = {}
   getFilesRecursively(pendingDeletion)  
   
-  print("Iterating over git tree")
+  update_print("Iterating over git tree")
 	for i,v in ipairs(contents.tree) do
     pendingDeletion[v.path] = nil
-    print("Removed file "..v.path.." from deletion")
+    update_print("Removed file "..v.path.." from deletion")
     
 		if v.path ~= "LICENSE" and not string.starts(v.path, ".") then 
       
@@ -110,17 +119,17 @@ function inner_update()
   
   if (#pendingDownload == 0) and (#pendingDeletion == 0) then return false end
   
-  print("Deleting upstream-removed files")
+  update_print("Deleting upstream-removed files")
   for k,v in pairs(pendingDeletion) do
     if v == true then
-      print("Deleting file" ..k)
+      update_print("Deleting file" ..k)
       fs.delete(k)
     end
   end
   
-  print("Downloading outdated files")
+  update_print("Downloading outdated files")
   for i,v in ipairs(pendingDownload) do
-    print("Downloading file "..v.path)
+    update_print("Downloading file "..v.path)
     local response, statusStr = http.get(ghDownloadAddr..(v.dlpath or v.path))
     if not response then
       print("ERROR: Could not get file "..v.path.." :"..statusStr)
@@ -132,7 +141,7 @@ function inner_update()
     end
   end
   
-  print("Updating manifest")
+  update_print("Updating manifest")
   manifestFile = fs.open("manifest.json", "w")
   manifestFile.write(json.encode(manifest))
   manifestFile.close()
@@ -140,14 +149,38 @@ function inner_update()
   return true
 end
 
-function loadModules()
+local function update(silent)
+
+  local function update_print(str)
+    if not silent then print(str) end
+  end
+
+  update_print("Updating...")
+  local r = inner_update(silent)
+  
+  if r then 
+    update_print("Updated!")
+    os.reboot()
+  end
+  
+  update_print("No updates found")
+  os.sleep(2)
+end
+
+local function dumpError(msg)
+  local dump = fs.open("error.log", "w")
+  dump.write(msg)
+  dump.close()
+end
+
+local function loadModules()
   
   print("Loading Modules")
   local moduleInfo = {}
   
   table.insert(moduleInfo, { require 'modules.astralnet' })
   table.insert(moduleInfo, { require 'modules.factory' })
-  table.insert(moduleInfo, { require 'modules.pocket' })
+  table.insert(moduleInfo, { require 'modules.ui' })
   
   local awaitingInit = {}
   
@@ -185,58 +218,23 @@ function loadModules()
   os.sleep(2)
 end
 
-if not pocket then
+update()
+loadModules()
 
-  update()
+local timerId = os.startTimer(60)
+
+while true do
+  local event = { os.pullEvent() }
   
-  loadModules()
-  
-  local timerId = os.startTimer(60)
-  
-  while true do
-    local event = { os.pullEvent() }
-    
-    if event[0] == "alarm" and timerId == event[1] 
-    then 
-      update()
-    else
-      for i,v in ipairs(modules) do
-        local success, retval = pcall(v, unpack(event))
-        if retval == true then break end
-      end
+  if event[0] == "alarm" and timerId == event[1] 
+  then 
+    update(true)
+  else
+    for i,v in ipairs(modules) do
+      local success, retval = pcall(v, unpack(event))
+      if retval == true then break end
     end
-    
-    os.sleep(0.5)
   end
   
-else
-
-  update()
-  
-  loadModules()
-  
-  local timerId = os.startTimer(60)
-  
-  while true do
-    local event = { os.pullEvent() }
-    
-    if event[0] == "alarm" and timerId == event[1] 
-    then 
-      update()
-    else
-      for i,v in ipairs(modules) do
-        local success, retval = xpcall(v, debug.traceback, unpack(event))
-        if not success then
-          term.clear()
-          term.setCursorPos(1, 1)
-          term.blit(retval, colors.red, colors.black)
-          return
-        else
-          if retval == true then break end
-        end
-      end
-    end
-    
-  end
-  
+  os.sleep(0.1)
 end
