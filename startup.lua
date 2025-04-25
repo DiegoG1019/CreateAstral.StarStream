@@ -1,9 +1,3 @@
-os.getComputerID = os.getComputerID
-os.sleep = os.sleep
-os.startTimer = os.startTimer
-os.pullEvent = os.pullEvent
-os.reboot = os.reboot
-
 do
   
   local hasFailed = settings.get("starstream.failed")
@@ -134,7 +128,7 @@ local function inner_update(silent)
     if not response then
       print("ERROR: Could not get file "..v.path.." :"..statusStr)
     else
-      local downfile = fs.open(v.path, "w")
+      local downfile = assert(fs.open(v.path, "w"))
       downfile.write(response.readAll())
       downfile.close()
       response.close()
@@ -142,7 +136,7 @@ local function inner_update(silent)
   end
   
   update_print("Updating manifest")
-  manifestFile = fs.open("manifest.json", "w")
+  manifestFile = assert(fs.open("manifest.json", "w"))
   manifestFile.write(json.encode(manifest))
   manifestFile.close()
   
@@ -168,7 +162,7 @@ local function update(silent)
 end
 
 local function dumpError(msg)
-  local dump = fs.open("error.log", "w")
+  local dump = assert(fs.open("error.log", "w"))
   dump.write(msg)
   dump.close()
 end

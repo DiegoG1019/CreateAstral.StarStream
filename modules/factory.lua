@@ -5,15 +5,18 @@ print("Initializing Factory Module")
 local itemHistory = {}
 local fluidHistory = {}
 local energyHistory = {}
+local stressUsage = nil
 
 local inventories;
 local energyStorage;
 local fluidStorage;
+local stressoMeter;
 
 StarStream.queryableInfo.factory = {}
 StarStream.queryableInfo.factory.items = itemHistory;
 StarStream.queryableInfo.factory.fluids = fluidHistory;
 StarStream.queryableInfo.factory.energy = energyHistory;
+StarStream.queryableInfo.factory.stressUsage = nil;
 
 settings.define("factory.redstoneMode", 
   { 
@@ -63,36 +66,45 @@ local function readItems()
   end
   
   local fluids = {}
-  --[[for i, storage in ipairs(fluidStorage) do
-    for fluid, amount pairs(inv.tanks()) do
-      local fluidc = fluids[fluid] or 0
-      fluids[fluid] = fluidc + (amount or 0)
+  for i, storage in ipairs(fluidStorage) do
+    for j, tank in ipairs(storage.tanks()) do
+      if tank.name ~= "minecraft:empty" then
+        local fluidc = fluids[tank.name] or 0
+        fluids[tank.name] = fluidc + (tank.amount or 0)
+      end
     end
-  end]] -- test how the table looks
+  end
   
   local energy = {}
   local tce = 0
   local tme = 0
-  for i, energy in ipairs(energyStorage) do
-    tce = tce + energy.getEnergy()
-    tme = tme + energy.getEnergyCapacity()
+  for i, en in ipairs(energyStorage) do
+    tce = tce + en.getEnergy()
+    tme = tme + en.getEnergyCapacity()
   end
   energy.TotalCurrentEnergy = tce
   energy.TotalMaxEnergy = tme
   
+  local su = nil
+  if stressoMeter then
+	su = stressoMeter.getStress()
+  end
+
   local tstamp = os.date("%c");
   prepareReadings(itemHistory, items, tstamp)
   prepareReadings(fluidHistory, fluids, tstamp)
   prepareReadings(energyHistory, energy, tstamp)
+  stressUsage = su
 end
 
 local function reloadPeripherals()
   inventories = {}
   energyStorage = {}
   fluidStorage = {}
+  stressoMeter = nil
   
   for i,v in ipairs(peripheral.getNames()) do
-    local inv = peripheral.wrap(v)
+    local inv = assert(peripheral.wrap(v))
     if inv.getItemDetail then 
       table.insert(inventories, inv)
     end
@@ -104,6 +116,12 @@ local function reloadPeripherals()
     if inv.tanks then
       table.insert(fluidStorage, inv)
     end
+
+---@diagnostic disable-next-line: undefined-field
+	if inv.getStress then
+		stressoMeter = inv
+	end
+
   end
   
 end

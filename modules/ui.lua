@@ -18,8 +18,18 @@ print("Initializing UI Module")
 local outputMode = settings.get("ui.output")
 if not outputMode then print("UI is disabled"); return end
 
+if not fs.exists("basalt.lua") then
+  os.run({}, "/rom/programs/http/wget", "run", "https://raw.githubusercontent.com/Pyroxenium/Basalt2/main/install.lua", "-r")
+end
+
+local basalt = require 'basalt'
+
 if outputMode ~= "!default" then
-  term.redirect(peripheral.wrap(outputMode))
+  local newOut = assert(peripheral.wrap(outputMode))
+  if newOut.blit then
+---@diagnostic disable-next-line: param-type-mismatch
+    term.redirect(newOut)
+  end
   print("Redirected Output")
 end
 
@@ -55,14 +65,14 @@ function menus.createQueryMenuFor(host)
   
   local sender, msg = StarStream.AstralNet.Query("endpoints", nil, host, 20)
   
-  if (not sender) or msg.code < 0 then
+  if (not sender) or assert(msg).code < 0 then
     blitLine("Could not load host endpoints :(", colors.lightBlue, colors.black)
     os.sleep(2)
     menus.createStartingMenu()
   else
     title = "Endpoints available for this host"
     options = {}
-    for i,v in ipairs(msg.body) do
+    for i,v in ipairs(assert(msg).body) do
       table.insert(options, createOption(v, function() info = tostring(StarStream.AstralNet.Query(v, nil, host, 20)); menus.createStartingMenu() end))
     end
   end
